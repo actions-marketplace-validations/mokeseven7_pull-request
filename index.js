@@ -56,13 +56,6 @@ async function run() {
             comment_id: context.payload.comment.id,
             content: reaction,
         })
-
-        await client.issues.createForIssueComment({
-            owner,
-            repo,
-            issue_number: context.payload.pull_request.number,
-            body: "hello world",
-        })
     } else {
         await client.reactions.createForIssue({
             owner,
