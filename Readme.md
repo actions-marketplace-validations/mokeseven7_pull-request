@@ -10,8 +10,6 @@ Your workflow needs to listen to the following events:
 
 ```
 on:
-  pull_request:
-    types: [opened]
   issue_comment:
     types: [created]
 ```

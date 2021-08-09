@@ -4,7 +4,10 @@ const core = require("@actions/core")
 const { context, GitHub } = require("@actions/github")
 
 async function run() {
+    core.debug("Hello World")
+
     const trigger = core.getInput("trigger", { required: true })
+    core.debug("INPUT" + trigger)
 
     const reaction = core.getInput("reaction")
     const { GITHUB_TOKEN } = process.env
