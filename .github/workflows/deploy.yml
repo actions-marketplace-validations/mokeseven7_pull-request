@@ -1,4 +1,4 @@
-name: Pull Request Comment Trigger Example
+name: Deploy On Comment
 on:
     pull_request:
         braches: [main]
