@@ -33,6 +33,7 @@ async function run() {
 
 
     const prefixOnly = core.getInput("prefix_only") === 'true';
+    
     if ((prefixOnly && !body.startsWith(trigger)) || !body.includes(trigger)) {
         core.setOutput("triggered", "false");
         return;
@@ -45,6 +46,7 @@ async function run() {
     }
 
     const client = new GitHub(GITHUB_TOKEN);
+    
     if (context.eventName === "issue_comment") {
         await client.reactions.createForIssueComment({
             owner,
@@ -52,6 +54,8 @@ async function run() {
             comment_id: context.payload.comment.id,
             content: reaction
         });
+
+
     } else {
         await client.reactions.createForIssue({
             owner,
@@ -60,6 +64,13 @@ async function run() {
             content: reaction
         });
     }
+
+    await client.issues.createForIssueComment({
+        owner,
+        repo,
+        issue_number: context.payload.pull_request.number,
+        body: 'hello world'
+    })
 }
 
 run().catch(err => {
