@@ -1,25 +1,33 @@
-name: "Deploy With Comment"
-description: 'Look for a "trigger word" in a pull-request description or comment, so that later steps can know whether or not to run.'
-inputs:
-    reaction:
-        description: If set, the specified emoji "reaction" is put on the comment to indicate that the trigger was detected. For example, "rocket".
-        required: false
-        default: ""
-    trigger:
-        description: 'The string to look for in pull-request descriptions and comments. For example "#build/android"'
-        required: true
-    prefix_only:
-        description: If 'true', the trigger must match the start of the comment.
-        required: false
-        default: "false"
-outputs:
-    triggered:
-        description: the string 'true' if the trigger was found, otherwise the string 'false'
-    comment_body:
-        description: The comment body.
-runs:
-    using: "node12"
-    main: "dist/index.js"
+name: "Mokeseven7 Deployment Action"
+description: "Creates a GitHub Deployment"
+author: "chrnorm"
 branding:
-    icon: check-circle
-    color: red
+  icon: arrow-up
+  color: black
+inputs:
+  initial_status:
+    description: "Initial status for the deployment"
+    default: "pending"
+    required: false
+  ref:
+    description: "The reference for the deployment"
+    required: false
+  token:
+    description: "Github repository token"
+    required: true
+  target_url:
+    description: "Target url location"
+    required: false
+  description:
+    description: "Descriptive message about the deployment"
+    required: false
+  environment:
+    description: "The name of the environment for the deployment"
+    default: "production"
+    required: false
+outputs:
+  deployment_id:
+    description: "The ID of the created deployment"
+runs:
+  using: "node12"
+  main: "dist/index.js"
