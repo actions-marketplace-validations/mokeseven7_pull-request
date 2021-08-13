@@ -1,72 +1,54 @@
-#!/usr/bin/env node
+import * as core from "@actions/core";
+import * as github from "@actions/github";
 
-const core = require("@actions/core")
-const { context, GitHub } = require("@actions/github")
+
 
 async function run() {
-    core.debug("Hello World")
+  try {
+    const context = github.context;
+    const logUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}/checks`;
 
-    const trigger = core.getInput("trigger", { required: true })
-    core.debug("INPUT" + trigger)
+    const token = core.getInput("token", { required: true });
+    const ref = core.getInput("ref", { required: false }) || context.ref;
+    const url = core.getInput("target_url", { required: false }) || logUrl;
+    const environment =
+      core.getInput("environment", { required: false }) || "production";
+    const description = core.getInput("description", { required: false });
+    const initialStatus = (core.getInput("initial_status", { required: false }) || "pending";
+    
+    
+    const autoMergeStringInput = core.getInput("auto_merge", {
+      required: false
+    });
 
-    const reaction = core.getInput("reaction")
-    const { GITHUB_TOKEN } = process.env
+    const auto_merge: boolean = autoMergeStringInput === "true";
 
-    if (reaction && !GITHUB_TOKEN) {
-        core.setFailed('If "reaction" is supplied, GITHUB_TOKEN is required')
-        return
-    }
+    const client = new github.GitHub(token, { previews: ["flash", "ant-man"] });
 
-    const body =
-        context.eventName === "issue_comment"
-            ? context.payload.comment.body
-            : context.payload.pull_request.body
-    core.setOutput("comment_body", body)
+    const deployment = await client.repos.createDeployment({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      ref: ref,
+      required_contexts: [],
+      environment,
+      transient_environment: true,
+      auto_merge,
+      description
+    });
 
-    if (
-        context.eventName === "issue_comment" &&
-        !context.payload.issue.pull_request
-    ) {
-        // not a pull-request comment, aborting
-        core.setOutput("triggered", "false")
-        return
-    }
+    await client.repos.createDeploymentStatus({
+      ...context.repo,
+      deployment_id: deployment.data.id,
+      state: initialStatus,
+      log_url: logUrl,
+      environment_url: url
+    });
 
-    const { owner, repo } = context.repo
-
-    const prefixOnly = core.getInput("prefix_only") === "true"
-
-    if ((prefixOnly && !body.startsWith(trigger)) || !body.includes(trigger)) {
-        core.setOutput("triggered", "false")
-        return
-    }
-
-    core.setOutput("triggered", "true")
-
-    if (!reaction) {
-        return
-    }
-
-    const client = new GitHub(GITHUB_TOKEN)
-
-    if (context.eventName === "issue_comment") {
-        await client.reactions.createForIssueComment({
-            owner,
-            repo,
-            comment_id: context.payload.comment.id,
-            content: reaction,
-        })
-    } else {
-        await client.reactions.createForIssue({
-            owner,
-            repo,
-            issue_number: context.payload.pull_request.number,
-            content: reaction,
-        })
-    }
+    core.setOutput("deployment_id", deployment.data.id.toString());
+  } catch (error) {
+    core.error(error);
+    core.setFailed(error.message);
+  }
 }
 
-run().catch(err => {
-    console.error(err)
-    core.setFailed("Unexpected error")
-})
+run();
